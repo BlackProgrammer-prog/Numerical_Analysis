@@ -23,6 +23,32 @@ This project is developed as part of a university **Mathematical Analysis** cour
 
 ## Installation & Usage
 
+### Windows desktop EXE
+
+The ready-to-run Windows 10/11 x64 application is generated at
+`dist/BaseConverter.exe`. Double-click it to open the calculator in its own
+window. Closing that window stops its embedded API too. You can copy just this
+EXE to another Windows x64 computer; Python, Node.js, Git Bash and a running web
+server are not needed. Calculations and solution steps run locally without an
+internet connection.
+
+Microsoft Edge **WebView2 Runtime** must be installed (it is already present on
+this development computer). If it is missing on another computer, install it
+from https://developer.microsoft.com/microsoft-edge/webview2/ .
+
+To rebuild the EXE after changing the app, install a current Python (3.13 is
+used for this build) and Node.js, then run from PowerShell:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\build-exe.ps1
+```
+
+This uses an isolated `.venv-desktop`, builds a static copy of the existing
+React interface, and packages it with Python, FastAPI and a native WebView2
+window using PyInstaller. It checks the packaged API and both methods through
+the actual window before finishing. The web deployment and `run.sh` are still
+available. Desktop logs are stored in `%LOCALAPPDATA%\BaseConverter\app.log`.
+
 ### Run everything with one command
 
 Install Python 3.10+ and Node.js 22.12+ first. From the repository root, run:

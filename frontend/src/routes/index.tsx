@@ -30,7 +30,7 @@ export const Route = createFileRoute("/")({
 
 type Side = "source" | "target";
 
-function Index() {
+export function Index() {
   const [method, setMethod] = useState<ConversionMethod>("standard");
   const [number, setNumber] = useState("");
   const [sourceBase, setSourceBase] = useState<string>("10");
