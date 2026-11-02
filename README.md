@@ -23,6 +23,34 @@ This project is developed as part of a university **Mathematical Analysis** cour
 
 ## Installation & Usage
 
+### Run everything with one command
+
+Install Python 3.10+ and Node.js 22.12+ first. From the repository root, run:
+
+```bash
+bash run.sh
+```
+
+On Windows, use **Git Bash** (installed with Git for Windows). Linux, macOS and
+WSL can use Bash with Python and Node installed in that environment. Do not share
+a Windows `.venv` or `node_modules` with WSL; use a separate checkout there.
+
+The script creates `.venv` if needed, installs/checks backend dependencies and
+installs frontend dependencies with `npm ci` when Vite is missing. It starts both
+development servers and stops them together with **Ctrl+C**, or if either exits.
+
+- Frontend: http://localhost:5173
+- Swagger: http://localhost:8000/docs
+
+The script sets local API and CORS URLs for this run, overriding production URLs
+in `frontend/.env` without editing that file. To use different ports:
+
+```bash
+BACKEND_PORT=8001 FRONTEND_PORT=5174 bash run.sh
+```
+
+For frontend dependency changes, run `npm ci` inside `frontend` again.
+
 ### Frontend
 
 Install the dependencies:
