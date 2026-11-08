@@ -1,15 +1,16 @@
 # Base Converter (Numerical Analysis Project)
 
-A simple number base conversion calculator that converts numbers between different bases, from **base 2 to base 36**.
+A simple number base conversion calculator that converts numbers between different bases, from **base 2 to base 62**.
 
 This project is developed as part of a university **Mathematical Analysis** course and provides two methods for number base conversion.
 
 ## Features
 
-- Convert numbers between bases **2 and 36**.
+- Convert numbers between bases **2 and 62**.
 - Support for positive and negative numbers.
 - Support for integer and fractional numbers.
-- Support for digits `0-9` and letters `A-Z`.
+- Support for digits `0-9`, uppercase letters `A-Z`, and lowercase letters `a-z`.
+- Case-sensitive digit representation for bases above 36.
 - Two conversion methods:
   - **Standard Method:** Converts the input number to base 10 first, then converts it to the target base.
   - **Horner's Method:** Converts numbers directly between bases using Horner's method.
@@ -124,8 +125,10 @@ and can be imported without prompting for input.
 `precision` is the maximum fractional output length (0–100, default 20).
 Nonterminating or longer fractions are truncated toward zero, without rounding;
 `truncated` reports whether a nonzero remainder was discarded. Input is limited
-to 512 characters, accepts leading `+`/`-`, lowercase or uppercase A–Z, and a
-single `.`. Invalid digits return HTTP 400 with `detail`; invalid request fields,
+to 512 characters, accepts leading `+`/`-`, digits `0-9`, uppercase letters
+`A-Z`, lowercase letters `a-z`, and a single `.`. Uppercase and lowercase
+letters represent different digit values in bases above 36.
+Invalid digits return HTTP 400 with `detail`; invalid request fields,
 bases or precision return HTTP 422. Numbers must be JSON strings to preserve
 large integers exactly.
 
@@ -172,8 +175,11 @@ Frontend checks (inside `frontend`): `npx tsc --noEmit`, `npm test`, `npm run bu
 
 ## Notes
 
-- Bases must be between **2 and 36**.
+- Supported bases range from **2 to 62**.
+- The digit system uses `0-9`, `A-Z`, and `a-z`.
+- Uppercase and lowercase letters have different values in bases above 36.
 - Fractional results may be limited to a fixed number of digits when the representation does not terminate in the target base.
+- The next development goal is to extend support to **base 94** by adding Persian letters to the digit system.
 - The frontend and backend must both be running for full application functionality.
 
 ## License
