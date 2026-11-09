@@ -1,13 +1,16 @@
 from fractions import Fraction
-from conversion_validation import normalize_number, validate_base, validate_precision
+from conversion_validation import (
+    DIGITS,
+    DIGIT_TO_VALUE,
+    normalize_number,
+    validate_base,
+    validate_precision,
+)
 from solution_steps import record, fraction_step, fraction_end
 
 
-DIGITS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-
-
 def digit_to_value(digit):
-    return DIGITS.index(digit)
+    return DIGIT_TO_VALUE[digit]
 
 
 def convert_to_decimal(number, source_base, steps=None):

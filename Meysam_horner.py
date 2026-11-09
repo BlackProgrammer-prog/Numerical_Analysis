@@ -1,8 +1,14 @@
 from fractions import Fraction
-from conversion_validation import normalize_number, validate_base, validate_precision
+from conversion_validation import (
+    DIGITS,
+    DIGIT_TO_VALUE,
+    normalize_number,
+    validate_base,
+    validate_precision,
+)
 from solution_steps import record, integer_in_base, fraction_step, fraction_end
 
-digits = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+digits = DIGITS  # Shared alphabet loaded from digit_map.json.
 
 
 def convert(number, x, y, precision=20, steps=None):
@@ -26,8 +32,8 @@ def convert(number, x, y, precision=20, steps=None):
     integer_part = parts[0] if parts[0] else "0"
     fraction_part = parts[1] if len(parts) == 2 else ""
 
-    integer_digits = [digits.index(ch) for ch in integer_part]
-    fraction_digits = [digits.index(ch) for ch in fraction_part]
+    integer_digits = [DIGIT_TO_VALUE[ch] for ch in integer_part]
+    fraction_digits = [DIGIT_TO_VALUE[ch] for ch in fraction_part]
 
     result = [0]
     record(steps, "شروع هورنر برای بخش صحیح",
