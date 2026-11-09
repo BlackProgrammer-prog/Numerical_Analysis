@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Check, ChevronDown, Moon, Plus, Sigma, Sun, X } from "lucide-react";
-import { STANDARD_BASES, getBaseName, validateCustomBase, type ConversionMethod } from "@/lib/bases";
+import { MAX_BASE, STANDARD_BASES, getBaseName, validateCustomBase, type ConversionMethod } from "@/lib/bases";
 
 /* ---------- Theme toggle ---------- */
 
@@ -200,8 +200,8 @@ export function BaseSelector({
 
 // Rules supported by both backend algorithms.
 export const CONVERSION_RULES: ReactNode[] = [
-  "مبنای ورودی و خروجی باید عدد صحیح بین ۲ تا ۳۶ باشند.",
-  "ارقام مجاز 0 تا 9 و حروف A تا Z هستند و ارزش هر رقم باید از مبنای ورودی کمتر باشد.",
+  `مبنای ورودی و خروجی باید عدد صحیح بین ۲ تا ${MAX_BASE.toLocaleString("fa-IR")} باشند.`,
+  "ارقام مجاز 0 تا 9، حروف A تا Z و a تا z هستند؛ در مبناهای بالاتر از ۳۶ حروف بزرگ و کوچک متفاوت‌اند و ارزش هر رقم باید از مبنای ورودی کمتر باشد.",
   "علامت مثبت یا منفی در ابتدای عدد و یک نقطه برای بخش اعشاری مجاز است.",
   "حداکثر طول ورودی ۵۱۲ نویسه است. نتیجه تا ۲۰ رقم اعشار نمایش داده می‌شود و در صورت قطع شدن، پیام نمایش داده خواهد شد.",
 ];

@@ -1,4 +1,7 @@
 // Base list and labels used by the base selectors.
+import digitMap from "../../../digit_map.json";
+
+export const MAX_BASE = Object.keys(digitMap).length;
 
 export type ConversionMethod = "standard" | "horner";
 
@@ -33,7 +36,7 @@ export function getBaseName(base: number): string {
   return NAMES[base]?.name ?? `Base ${base}`;
 }
 
-export const STANDARD_BASES: BaseOption[] = Array.from({ length: 35 }, (_, i) => {
+export const STANDARD_BASES: BaseOption[] = Array.from({ length: MAX_BASE - 1 }, (_, i) => {
   const value = i + 2;
   return { value, name: getBaseName(value), persian: NAMES[value]?.persian };
 });
@@ -44,6 +47,6 @@ export function validateCustomBase(raw: string): string | null {
   if (v === "") return "لطفاً یک مبنا وارد کنید.";
   if (!/^\d+$/.test(v)) return "مبنا باید یک عدد صحیح باشد.";
   if (BigInt(v) < 2n) return "مبنا باید بزرگ‌تر یا مساوی ۲ باشد.";
-  if (BigInt(v) > 36n) return "مبنا باید کوچک‌تر یا مساوی ۳۶ باشد.";
+  if (BigInt(v) > BigInt(MAX_BASE)) return `مبنا باید کوچک‌تر یا مساوی ${MAX_BASE.toLocaleString("fa-IR")} باشد.`;
   return null;
 }
