@@ -17,6 +17,10 @@ client = TestClient(app)
     (".5", 10, 2, "0.1"), ("+10.", 10, 16, "A"),
     ("-0.0", 10, 2, "0"), ("Z", 36, 10, "35"),
     ("9007199254740993", 10, 16, "20000000000001"),
+    ("a", 37, 10, "36"), ("A", 62, 10, "10"),
+    ("z", 62, 10, "61"), ("61", 10, 62, "z"),
+    ("-z.V", 62, 10, "-61.5"), ("61.5", 10, 62, "z.V"),
+    ("z", 36, 10, "35"),
 ])
 def test_known_conversions(algorithm, number, source, target, expected):
     assert algorithm(number, source, target) == expected
@@ -25,8 +29,8 @@ def test_known_conversions(algorithm, number, source, target, expected):
 @pytest.mark.parametrize("algorithm", [convert_base, convert])
 @pytest.mark.parametrize("number,source,target,precision", [
     ("", 10, 2, 20), (".", 10, 2, 20), ("+", 10, 2, 20),
-    ("1.2.3", 10, 2, 20), ("2", 2, 10, 20), ("1 0", 10, 2, 20),
-    ("1", 1, 10, 20), ("1", 10, 37, 20), ("1", True, 10, 20),
+    ("1.2.3", 10, 2, 20), ("2", 2, 10, 20), ("1 0", 10, 2, 20), ("b", 37, 10, 20),
+    ("1", 1, 10, 20), ("1", 10, 63, 20), ("1", True, 10, 20),
     ("1", 10, 2, -1), ("1", 10, 2, 101), ("1" * 513, 10, 2, 20),
 ])
 def test_invalid_input(algorithm, number, source, target, precision):
@@ -37,7 +41,7 @@ def test_invalid_input(algorithm, number, source, target, precision):
 def test_algorithms_agree_and_truncate_toward_zero():
     rng = random.Random(42)
     for _ in range(200):
-        source, target = rng.randint(2, 36), rng.randint(2, 36)
+        source, target = rng.randint(2, 62), rng.randint(2, 62)
         precision = rng.randint(0, 25)
         original = Fraction(rng.randint(-1000000, 1000000), source ** 4)
         number = convert_from_decimal(original, source, 4)
@@ -73,7 +77,7 @@ def test_api_precision(number, precision, truncated, result):
 
 @pytest.mark.parametrize("overrides,status", [
     ({"number": "2", "sourceBase": 2}, 400), ({"number": "."}, 400),
-    ({"sourceBase": 37}, 422), ({"sourceBase": True}, 422),
+    ({"sourceBase": 63}, 422), ({"sourceBase": True}, 422),
     ({"targetBase": 2.5}, 422), ({"number": 10}, 422),
     ({"method": "unknown"}, 422), ({"precision": -1}, 422),
     ({"number": "1" * 513}, 422), ({"extra": 1}, 422),

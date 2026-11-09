@@ -57,7 +57,7 @@ def test_reverse_horner_reads_fractional_digits_right_to_left():
 @pytest.mark.parametrize("method", ["standard", "horner"])
 @pytest.mark.parametrize("number,source,target,precision", [
     ("-a.f", 16, 2, 20), ("0", 10, 2, 20), ("-0", 10, 2, 20),
-    (".5", 10, 2, 0), ("0.1", 10, 2, 3), ("1.25", 10, 10, 20),
+    (".5", 10, 2, 0), ("0.1", 10, 2, 3), ("1.25", 10, 10, 20), ("-z.V", 62, 10, 20), ("61.5", 10, 62, 20),
 ])
 def test_api_exposes_ordered_steps_and_the_same_final_result(method, number, source, target, precision):
     response = client.post("/api/convert", json={
@@ -70,6 +70,6 @@ def test_api_exposes_ordered_steps_and_the_same_final_result(method, number, sou
     assert steps
     assert all(set(step) == {"title", "description", "expression"} for step in steps)
     assert steps[-1]["title"] == "نتیجهٔ نهایی"
-    assert steps[-1]["expression"] == f"({number.upper()})_{source} → ({body['result']})_{target}"
+    assert steps[-1]["expression"] == f"({(number.upper() if source <= 36 else number)})_{source} → ({body['result']})_{target}"
     algorithm = convert_base if method == "standard" else convert
     assert body["result"] == algorithm(number, source, target, precision)

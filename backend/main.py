@@ -7,7 +7,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from Alireza_mabna10 import convert_base, convert_to_decimal
 from Meysam_horner import convert
-from conversion_validation import MAX_NUMBER_LENGTH, MAX_PRECISION
+from conversion_validation import MAX_BASE, MAX_NUMBER_LENGTH, MAX_PRECISION
 
 
 class ConversionRequest(BaseModel):
@@ -17,9 +17,9 @@ class ConversionRequest(BaseModel):
     })
 
     number: str = Field(min_length=1, max_length=MAX_NUMBER_LENGTH,
-                        description="Signed number using 0-9, A-Z and an optional decimal point.")
-    sourceBase: int = Field(ge=2, le=36, strict=True)
-    targetBase: int = Field(ge=2, le=36, strict=True)
+                        description="Signed number using 0-9, A-Z, a-z and an optional decimal point; case-sensitive above base 36.")
+    sourceBase: int = Field(ge=2, le=MAX_BASE, strict=True)
+    targetBase: int = Field(ge=2, le=MAX_BASE, strict=True)
     method: Literal["standard", "horner"] = "standard"
     precision: int = Field(default=20, ge=0, le=MAX_PRECISION, strict=True,
                            description="Maximum fractional output digits; truncates toward zero.")
@@ -43,7 +43,7 @@ class ConversionError(BaseModel):
 
 app = FastAPI(
     title="Number Base Converter API",
-    description="Convert signed integers and fractions between bases 2–36 using standard or Horner conversion.",
+    description=f"Convert signed integers and fractions between bases 2–{MAX_BASE} using standard or Horner conversion.",
     version="1.0.0",
 )
 app.add_middleware(
