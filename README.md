@@ -201,6 +201,27 @@ Frontend checks (inside `frontend`): `npx tsc --noEmit`, `npm test`, `npm run bu
 
 ## Notes
 
+### Build the Windows EXE with one command
+
+On Windows, install Python 3.10+, Node.js and Git for Windows. From Git Bash,
+run this command in the repository root (it also works from another directory
+when given the script's full path):
+
+```bash
+bash build-exe.sh
+```
+
+The script runs `build-exe.ps1`: it creates `.venv-desktop` if needed, installs
+Python desktop dependencies, installs frontend dependencies if missing, builds
+the desktop frontend, and bundles the backend, frontend and `digit_map.json`
+with PyInstaller. It then checks the packaged API (including base 62 for both
+methods) and the React interface in a hidden WebView2 window. Any failed step
+stops the build with a nonzero exit code.
+
+Output: `dist/BaseConverter.exe`. The target PC needs Microsoft Edge WebView2
+Runtime; Python and Node.js are only needed on the build PC. Run the build on
+Windows using Git Bash; Linux/WSL cannot cross-compile this Windows application.
+
 - Supported bases range from **2 to 62**.
 - The digit system uses `0-9`, `A-Z`, and `a-z`.
 - Uppercase and lowercase letters have different values in bases above 36.
