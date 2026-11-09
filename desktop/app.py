@@ -68,13 +68,20 @@ def smoke_test(server):
     with urlopen(server.url, timeout=10) as response:
         assert b'<div id="root">' in response.read()
     for method in ("standard", "horner"):
-        request = Request(server.url + "/api/convert", data=json.dumps({
-            "number": "-A.F", "sourceBase": 16, "targetBase": 2, "method": method,
-        }).encode(), headers={"Content-Type": "application/json"})
-        with urlopen(request, timeout=10) as response:
-            result = json.load(response)
-        assert result["result"] == "-1010.1111"
-        assert result["steps"][-1]["title"] == "نتیجهٔ نهایی"
+        for number, source, target, expected in (
+            ("-A.F", 16, 2, "-1010.1111"),
+            ("-z.V", 62, 10, "-61.5"),
+            ("61.5", 10, 62, "z.V"),
+            ("a", 37, 10, "36"),
+            ("A", 62, 10, "10"),
+        ):
+            request = Request(server.url + "/api/convert", data=json.dumps({
+                "number": number, "sourceBase": source, "targetBase": target, "method": method,
+            }).encode(), headers={"Content-Type": "application/json"})
+            with urlopen(request, timeout=10) as response:
+                result = json.load(response)
+            assert result["result"] == expected
+            assert result["steps"][-1]["title"] == "نتیجهٔ نهایی"
 
 
 def ui_smoke_test(window, outcome):
