@@ -5,3 +5,4 @@ export * from "./horner";
 export * from "./bounds";
 export * from "./newton";
 export * from "./bivariate";
+export * from "./benchmark";
