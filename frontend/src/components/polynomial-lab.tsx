@@ -1,76 +1,40 @@
-import { useMemo, useState, type ReactNode } from "react";
-import { AreaChart, BookOpen, Calculator, ChevronLeft, FunctionSquare, Gauge, Play, RotateCcw } from "lucide-react";
-import { CartesianGrid, Line, LineChart, ReferenceDot, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import {
-  calculateBounds, derivativeCoefficients, formatPolynomial, parseBivariatePolynomial, parsePolynomial,
-  reduceAtX, runBivariateNewton, runHorner, runNewton, samplePolynomial,
-  type HornerResult, type LearningStep, type NewtonResult,
-} from "@/lib/numerical";
+import { useState } from "react";
+import { NUMERICAL_MODULES, type NumericalModuleId } from "./numerical-lab/config";
+import { BivariateModule } from "./numerical-lab/modules/bivariate-module";
+import { BoundsModule } from "./numerical-lab/modules/bounds-module";
+import { HornerModule } from "./numerical-lab/modules/horner-module";
+import { NewtonModule } from "./numerical-lab/modules/newton-module";
 
-type Module = "horner" | "bounds" | "newton" | "bivariate";
-const modules: Array<{ id: Module; label: string; icon: typeof Calculator }> = [
-  { id: "horner", label: "تقسیم هورنر", icon: Calculator }, { id: "bounds", label: "کران ریشه‌ها", icon: Gauge },
-  { id: "newton", label: "نیوتن–رافسون", icon: AreaChart }, { id: "bivariate", label: "معادلهٔ دو متغیره", icon: FunctionSquare },
-];
-const number = (value: number) => Number(value.toPrecision(10)).toString();
-const inputClass = "h-11 w-full rounded-lg border border-input bg-background px-3 font-mono text-sm outline-none transition focus:border-ring";
+const MODULE_CONTENT: Record<NumericalModuleId, () => React.JSX.Element> = {
+  horner: HornerModule,
+  bounds: BoundsModule,
+  newton: NewtonModule,
+  bivariate: BivariateModule,
+};
 
-function Field({ label, children, hint }: { label: string; children: ReactNode; hint?: string }) { return <label className="block"><span className="mb-1.5 block text-sm font-medium">{label}</span>{children}{hint && <span className="mt-1 block text-xs text-muted-foreground">{hint}</span>}</label>; }
-function Intro({ title, text }: { title: string; text: string }) { return <div className="rounded-xl border border-primary/20 bg-accent/60 p-4"><div className="flex gap-3"><BookOpen className="mt-0.5 h-5 w-5 shrink-0 text-primary" /><div><h2 className="font-semibold">{title}</h2><p className="mt-1 text-sm leading-7 text-muted-foreground">{text}</p></div></div></div>; }
-function ErrorBox({ text }: { text: string }) { return text ? <p role="alert" className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">{text}</p> : null; }
-function Metric({ label, value }: { label: string; value: string }) { return <div className="rounded-xl border border-border bg-secondary/50 p-4"><p className="text-xs text-muted-foreground">{label}</p><p className="mt-2 font-mono text-xl font-bold" dir="ltr">{value}</p></div>; }
+export function PolynomialLab() {
+  const [activeModule, setActiveModule] = useState<NumericalModuleId>("horner");
+  const ActiveModule = MODULE_CONTENT[activeModule];
 
-function StepPlayer({ steps }: { steps: LearningStep[] }) {
-  const [visible, setVisible] = useState(1);
-  return <section className="rounded-xl border border-border bg-card p-4"><div className="flex items-center justify-between gap-3"><div><h3 className="font-semibold">حالت آموزشی قدم‌به‌قدم</h3><p className="mt-1 text-xs text-muted-foreground">هر کلیک فقط یک عملیات جدید را آشکار می‌کند.</p></div><span className="rounded-full bg-secondary px-3 py-1 font-mono text-xs">{Math.min(visible, steps.length)} / {steps.length}</span></div>
-    <div className="mt-4 space-y-2">{steps.slice(0, visible).map((step, index) => <div key={step.id} className={`animate-in slide-in-from-top-2 rounded-lg border p-3 ${step.kind === "success" ? "border-emerald-500/40 bg-emerald-500/10" : step.kind === "warning" ? "border-amber-500/40 bg-amber-500/10" : "border-border bg-secondary/40"}`}><div className="flex gap-3"><span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-primary text-xs font-bold text-primary-foreground">{index + 1}</span><div className="min-w-0"><p className="text-sm font-semibold">{step.title}</p><p className="mt-0.5 text-xs leading-6 text-muted-foreground">{step.description}</p><code className="mt-2 block overflow-x-auto rounded bg-background px-2 py-1.5 text-left text-xs" dir="ltr">{step.expression}</code></div></div></div>)}</div>
-    <div className="mt-4 flex gap-2"><button type="button" disabled={visible >= steps.length} onClick={() => setVisible((v) => Math.min(v + 1, steps.length))} className="flex h-10 flex-1 items-center justify-center gap-2 rounded-lg bg-primary text-sm font-semibold text-primary-foreground disabled:opacity-40"><ChevronLeft className="h-4 w-4" />مرحلهٔ بعد</button><button type="button" onClick={() => setVisible(1)} className="grid h-10 w-10 place-items-center rounded-lg border border-border"><RotateCcw className="h-4 w-4" /></button></div>
-  </section>;
+  return (
+    <div>
+      <div className="mb-6 overflow-x-auto">
+        <nav className="flex min-w-max gap-2 scro" aria-label="ماژول‌های محاسبات عددی">
+          {NUMERICAL_MODULES.map(({ id, label, icon: Icon }) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => setActiveModule(id)}
+              aria-pressed={activeModule === id}
+              className={`flex items-center gap-2 rounded-lg border px-3 py-2 mb-20 text-sm font-medium ${activeModule === id ? "border-primary bg-primary text-primary-foreground" : "border-border"}`}
+            >
+              <Icon className="h-4 w-4" />
+              {label}
+            </button>
+          ))}
+        </nav>
+      </div>
+      <ActiveModule />
+    </div>
+  );
 }
-
-function HornerBoard({ result }: { result: HornerResult }) {
-  const cells = (values: Array<number | null>, tone: string) => values.map((value, index) => <td key={index} className={`min-w-20 border-s border-border p-3 text-center font-mono ${tone}`}>{value === null ? "—" : number(value)}</td>);
-  return <section className="overflow-hidden rounded-xl border border-border"><div className="border-b border-border bg-secondary/50 px-4 py-3"><h3 className="font-semibold">جدول سه‌ردیفهٔ هورنر</h3><p className="mt-1 text-xs text-muted-foreground">λ = {number(result.lambda)}؛ آخرین عدد ردیف جمع همان P(λ) است.</p></div><div className="overflow-x-auto"><table className="w-full border-collapse text-sm" dir="ltr"><tbody><tr className="border-b"><th className="p-3" dir="rtl">ضرایب</th>{cells(result.normalizedCoefficients, "")}</tr><tr className="border-b"><th className="p-3 text-primary" dir="rtl">حاصل‌ضرب‌ها</th>{cells(result.products, "text-primary")}</tr><tr><th className="p-3" dir="rtl">جمع‌ها</th>{cells(result.sums, "bg-accent font-bold")}</tr></tbody></table></div>
-    <div className="grid gap-px border-t bg-border sm:grid-cols-3"><MetricCell label="خارج‌قسمت" value={`[${result.quotient.map(number).join(", ")}]`} /><MetricCell label="باقی‌مانده" value={number(result.remainder)} /><MetricCell label="مقدار P(λ)" value={number(result.value)} /></div><div className={`border-t p-3 text-sm ${result.boundStatus === "confirmed" ? "bg-emerald-500/10" : "bg-amber-500/10"}`}>{result.boundStatus === "confirmed" ? "✓ این λ توسط آزمون هورنر به‌عنوان کران بالا تأیید شد." : result.boundStatus === "not-confirmed" ? "این λ تأیید نشد؛ این نتیجه رد قطعی کران نیست." : "آزمون کران فقط برای λ مثبت قابل استفاده است."}</div></section>;
-}
-function MetricCell({ label, value }: { label: string; value: string }) { return <div className="bg-card p-3"><span className="text-xs text-muted-foreground">{label}</span><p className="mt-1 font-mono" dir="ltr">{value}</p></div>; }
-
-function HornerModule() {
-  const [expression, setExpression] = useState("x^3+2x-5"), [lambda, setLambda] = useState("1"); const [result, setResult] = useState<HornerResult | null>(null), [error, setError] = useState("");
-  const execute = () => { try { setResult(runHorner(parsePolynomial(expression, "x").coefficients, Number(lambda))); setError(""); } catch (e) { setError(e instanceof Error ? e.message : "ورودی نامعتبر است."); } };
-  return <div className="space-y-5"><Intro title="تقسیم مصنوعی هورنر" text="توان‌های غایب خودکار با ضریب صفر درج می‌شوند. سپس پایین‌آوردن، ضرب و جمع تا رسیدن به باقی‌مانده ادامه می‌یابد." /><div className="grid gap-4 rounded-xl border p-4 sm:grid-cols-[1fr_140px]"><Field label="چندجمله‌ای" hint="مثال: x^3+2x-5"><input className={inputClass} dir="ltr" value={expression} onChange={(e) => setExpression(e.target.value)} /></Field><Field label="مقدار λ"><input className={inputClass} dir="ltr" type="number" step="any" value={lambda} onChange={(e) => setLambda(e.target.value)} /></Field><button onClick={execute} className="flex h-11 items-center justify-center gap-2 rounded-lg bg-primary font-semibold text-primary-foreground sm:col-span-2"><Play className="h-4 w-4" />اجرای هورنر</button></div><ErrorBox text={error} />{result && <><HornerBoard result={result} /><StepPlayer key={`${expression}-${lambda}`} steps={result.steps} /></>}</div>;
-}
-
-function TrialList({ title, trials }: { title: string; trials: HornerResult[] }) { return <section className="rounded-xl border p-4"><h3 className="font-semibold">{title}</h3><div className="mt-3 space-y-2">{trials.map((trial) => <div key={trial.lambda} className={`rounded-lg p-3 text-sm ${trial.boundStatus === "confirmed" ? "bg-emerald-500/10" : "bg-secondary"}`}><div className="flex justify-between"><strong>λ = {trial.lambda}</strong><span>{trial.boundStatus === "confirmed" ? "تأیید شد" : "تأیید نشد"}</span></div><p className="mt-1 font-mono text-xs" dir="ltr">[{trial.sums.map(number).join(", ")}]</p></div>)}</div></section>; }
-function BoundsModule() {
-  const [expression, setExpression] = useState("x^3+2x-5"), [lambda, setLambda] = useState("1"); const [data, setData] = useState<ReturnType<typeof calculateBounds> | null>(null), [manual, setManual] = useState<HornerResult | null>(null), [error, setError] = useState("");
-  const parsed = () => parsePolynomial(expression, "x");
-  const auto = () => { try { setData(calculateBounds(parsed().coefficients)); setError(""); } catch (e) { setError(e instanceof Error ? e.message : "خطا"); } };
-  const test = () => { try { setManual(runHorner(parsed().coefficients, Number(lambda))); setError(""); } catch (e) { setError(e instanceof Error ? e.message : "خطا"); } };
-  return <div className="space-y-5"><Intro title="کران بالا و پایین ریشه‌ها" text="برای کران پایین، q(x)=(-1)ⁿP(−x) ساخته و کران بالای q به کران پایین P تبدیل می‌شود." /><div className="rounded-xl border p-4"><Field label="چندجمله‌ای"><input className={inputClass} dir="ltr" value={expression} onChange={(e) => { setExpression(e.target.value); setData(null); }} /></Field><div className="mt-3 grid gap-3 sm:grid-cols-[140px_1fr_1fr]"><input className={inputClass} dir="ltr" type="number" step="any" value={lambda} onChange={(e) => setLambda(e.target.value)} /><button onClick={test} className="h-11 rounded-lg border border-primary font-semibold text-primary">آزمون λ دلخواه</button><button onClick={auto} className="h-11 rounded-lg bg-primary font-semibold text-primary-foreground">یافتن بازهٔ صحیح</button></div></div><ErrorBox text={error} />{manual && <HornerBoard result={manual} />}{data && <><div className="grid gap-3 sm:grid-cols-3"><Metric label="کران پایین" value={number(data.lower)} /><Metric label="کران بالا" value={number(data.upper.bound)} /><Metric label="بازهٔ نهایی" value={`[${data.lower}, ${data.upper.bound}]`} /></div><section className="rounded-xl border p-4"><h3 className="font-semibold">تبدیل کران پایین</h3><p className="mt-3 rounded-lg bg-secondary p-3 font-mono" dir="ltr">q(x) = (−1)ⁿP(−x) = {data.q.expression}</p><p className="mt-2 text-sm">کران بالای q برابر {data.lowerMagnitude.bound}؛ بنابراین کران پایین P برابر {data.lower} است.</p></section><div className="grid gap-4 lg:grid-cols-2"><TrialList title="آزمون‌های P" trials={data.upper.trials} /><TrialList title="آزمون‌های q" trials={data.lowerMagnitude.trials} /></div></>}</div>;
-}
-
-function NewtonForm({ expression, setExpression, initial, setInitial, onRun, extra }: { expression: string; setExpression: (v: string) => void; initial: string; setInitial: (v: string) => void; onRun: (e: number, m: number) => void; extra?: ReactNode }) {
-  const [tolerance, setTolerance] = useState("0.000001"), [maximum, setMaximum] = useState("50");
-  return <div className="grid gap-4 rounded-xl border p-4 sm:grid-cols-2"><div className="sm:col-span-2"><Field label="تابع چندجمله‌ای"><input className={inputClass} dir="ltr" value={expression} onChange={(e) => setExpression(e.target.value)} /></Field></div>{extra}<Field label="حدس اولیه"><input className={inputClass} dir="ltr" type="number" step="any" value={initial} onChange={(e) => setInitial(e.target.value)} /></Field><Field label="خطای مجاز ε"><input className={inputClass} dir="ltr" type="number" step="any" value={tolerance} onChange={(e) => setTolerance(e.target.value)} /></Field><Field label="حداکثر تکرار"><input className={inputClass} dir="ltr" type="number" value={maximum} onChange={(e) => setMaximum(e.target.value)} /></Field><button onClick={() => onRun(Number(tolerance), Number(maximum))} className="h-11 self-end rounded-lg bg-primary font-semibold text-primary-foreground">اجرای نیوتن–رافسون</button></div>;
-}
-function FunctionGraph({ coefficients, result }: { coefficients: number[]; result: NewtonResult }) {
-  const guesses = [result.iterations[0]?.current, ...result.iterations.map((it) => it.next)].filter((v): v is number => Number.isFinite(v)); const min = Math.min(...guesses, result.root) - 1, max = Math.max(...guesses, result.root) + 1; const data = useMemo(() => samplePolynomial(coefficients, min, max), [coefficients, min, max]);
-  return <section className="rounded-xl border p-4"><h3 className="font-semibold">نمودار تابع و موقعیت حدس‌ها</h3><div className="mt-3 h-72" dir="ltr"><ResponsiveContainer><LineChart data={data}><CartesianGrid strokeDasharray="3 3" opacity={0.3} /><XAxis dataKey="x" type="number" domain={[min, max]} tickFormatter={number} /><YAxis tickFormatter={number} /><Tooltip /><ReferenceLine y={0} stroke="currentColor" opacity={0.5} /><Line type="monotone" dataKey="y" stroke="var(--primary)" dot={false} strokeWidth={2} />{result.iterations.map((it) => <ReferenceDot key={it.iteration} x={it.current} y={it.value} r={5} fill="#6366f1" />)}<ReferenceDot x={result.root} y={0} r={7} fill="#10b981" /></LineChart></ResponsiveContainer></div></section>;
-}
-function NewtonOutput({ result, coefficients }: { result: NewtonResult; coefficients: number[] }) {
-  const steps = result.iterations.flatMap((it) => it.steps);
-  return <><div className={`rounded-xl border p-4 ${result.converged ? "border-emerald-500/40 bg-emerald-500/10" : "border-amber-500/40 bg-amber-500/10"}`}><p className="font-semibold">{result.converged ? "✓ همگرایی موفق" : "عدم همگرایی"}</p><p className="mt-1 text-sm">{result.message}</p><p className="mt-2 font-mono text-xl" dir="ltr">root ≈ {number(result.root)}</p></div><FunctionGraph {...{ coefficients, result }} /><section className="overflow-hidden rounded-xl border"><h3 className="p-4 font-semibold">جدول کامل تکرارها</h3><div className="overflow-x-auto"><table className="w-full min-w-[760px] text-center text-sm" dir="ltr"><thead className="bg-secondary"><tr><th className="p-3">n</th><th>xₙ</th><th>f(xₙ)</th><th>f′(xₙ)</th><th>xₙ₊₁</th><th>|Δx|</th><th>|f(xₙ₊₁)|</th></tr></thead><tbody>{result.iterations.map((it) => <tr key={it.iteration} className="border-t font-mono"><td className="p-3">{it.iteration}</td><td>{number(it.current)}</td><td>{number(it.value)}</td><td>{number(it.derivative)}</td><td>{number(it.next)}</td><td>{number(it.error)}</td><td>{number(it.residual)}</td></tr>)}</tbody></table></div></section>{steps.length > 0 && <StepPlayer key={`${result.root}-${steps.length}`} steps={steps} />}</>;
-}
-function NewtonModule() {
-  const [expression, setExpression] = useState("y^3+5y+1"), [initial, setInitial] = useState("-0.2"); const [result, setResult] = useState<NewtonResult | null>(null), [coefficients, setCoefficients] = useState<number[]>([]), [error, setError] = useState("");
-  const execute = (tolerance: number, maxIterations: number) => { try { const p = parsePolynomial(expression, "y"); setCoefficients(p.coefficients); setResult(runNewton(p.coefficients, { initial: Number(initial), tolerance, maxIterations })); setError(""); } catch (e) { setError(e instanceof Error ? e.message : "خطا"); } };
-  return <div className="space-y-5"><Intro title="روش نیوتن–رافسون" text="مشتق تحلیلی ساخته می‌شود و هم اختلاف حدس‌ها و هم باقی‌ماندهٔ تابع برای توقف بررسی می‌شوند." /><div className="flex gap-2"><button onClick={() => { setExpression("y^3+5y+1"); setInitial("-0.2"); }} className="rounded-full border px-3 py-1.5 text-xs">مثال جزوه</button><button onClick={() => { setExpression("y^3-y+1"); setInitial("-1.5"); }} className="rounded-full border px-3 py-1.5 text-xs">تمرین آماده</button></div><NewtonForm {...{ expression, setExpression, initial, setInitial }} onRun={execute} /><ErrorBox text={error} />{result && <NewtonOutput {...{ result, coefficients }} />}</div>;
-}
-function BivariateModule() {
-  const [expression, setExpression] = useState("y^3+xy+1"), [x, setX] = useState("5"), [initial, setInitial] = useState("-0.2"); const [result, setResult] = useState<NewtonResult | null>(null), [coefficients, setCoefficients] = useState<number[]>([]), [reduced, setReduced] = useState(""), [error, setError] = useState("");
-  const execute = (tolerance: number, maxIterations: number) => { try { const p = parseBivariatePolynomial(expression), c = reduceAtX(p, Number(x)); setCoefficients(c); setReduced(formatPolynomial(c, "y")); setResult(runBivariateNewton(p, Number(x), { initial: Number(initial), tolerance, maxIterations })); setError(""); } catch (e) { setError(e instanceof Error ? e.message : "خطا"); } };
-  return <div className="space-y-5"><Intro title="نیوتن برای F(x,y)=0" text="x ثابت و مشتق جزئی نسبت به y محاسبه می‌شود. parser امن فقط چندجمله‌ای‌های x و y را می‌پذیرد." /><div className="flex gap-2"><button onClick={() => setX("5")} className="rounded-full border px-3 py-1.5 text-xs">x=5</button><button onClick={() => setX("-1")} className="rounded-full border px-3 py-1.5 text-xs">x=−1</button></div><NewtonForm {...{ expression, setExpression, initial, setInitial }} onRun={execute} extra={<Field label="مقدار ثابت x"><input className={inputClass} dir="ltr" type="number" step="any" value={x} onChange={(e) => setX(e.target.value)} /></Field>} /><ErrorBox text={error} />{reduced && <div className="rounded-xl border border-primary/30 bg-accent p-4"><p className="text-xs text-muted-foreground">پس از ثابت‌گرفتن x:</p><p className="mt-1 font-mono" dir="ltr">F({x}, y) = {reduced}</p><p className="font-mono text-sm" dir="ltr">Fᵧ = {formatPolynomial(derivativeCoefficients(coefficients), "y")}</p></div>}{result && <NewtonOutput {...{ result, coefficients }} />}</div>;
-}
-
-export function PolynomialLab() { const [active, setActive] = useState<Module>("horner"); return <div><div className="mb-6 overflow-x-auto"><nav className="flex min-w-max gap-2">{modules.map((item) => { const Icon = item.icon; return <button key={item.id} onClick={() => setActive(item.id)} className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium ${active === item.id ? "border-primary bg-primary text-primary-foreground" : "border-border"}`}><Icon className="h-4 w-4" />{item.label}</button>; })}</nav></div>{active === "horner" && <HornerModule />}{active === "bounds" && <BoundsModule />}{active === "newton" && <NewtonModule />}{active === "bivariate" && <BivariateModule />}</div>; }
