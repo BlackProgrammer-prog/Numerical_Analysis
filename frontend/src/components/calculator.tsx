@@ -347,8 +347,8 @@ export function Footer() {
   return (
     <footer className="mt-12 border-t border-border pt-6 text-center text-sm leading-7 text-muted-foreground">
       <p>کاری از بچه‌های علوم کامپیوتر دانشگاه شاهد</p>
-      <p>پروژه درس آنالیز ریاضی - پاییز 1405</p>
-      <p><a href="https://github.com">لینک پروژه</a></p>
+      <p>پروژه درس آنالیز عددی - پاییز 1405</p>
+      <p><a href="https://github.com/BlackProgrammer-prog/Numerical_Analysis">لینک پروژه</a></p>
     </footer>
   );
 }
