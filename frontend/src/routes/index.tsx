@@ -88,7 +88,7 @@ export function Index() {
           <div className="rounded-2xl border border-border bg-card p-5 shadow-soft sm:p-7">
             <div className="mb-6 grid grid-cols-2 gap-1 rounded-xl border border-border bg-secondary p-1">
               <button type="button" onClick={() => setWorkspace("conversion")} className={`rounded-lg px-3 py-2.5 text-sm font-semibold transition ${workspace === "conversion" ? "bg-card shadow-soft" : "text-muted-foreground"}`}>تبدیل مبنا</button>
-              <button type="button" onClick={() => setWorkspace("numerical")} className={`rounded-lg px-3 py-2.5 text-sm font-semibold transition ${workspace === "numerical" ? "bg-card shadow-soft" : "text-muted-foreground"}`}>آزمایشگاه محاسبات عددی</button>
+              <button type="button" onClick={() => setWorkspace("numerical")} className={`rounded-lg px-3 py-2.5 text-sm font-semibold transition ${workspace === "numerical" ? "bg-card shadow-soft" : "text-muted-foreground"}`}>تعیین بازه ریشه</button>
             </div>
             {workspace === "conversion" ? <>
             <MethodSelector value={method} onChange={(m) => { invalidateResult(); setMethod(m); }} />
