@@ -13,6 +13,7 @@ import {
 import type { ConversionMethod } from "@/lib/bases";
 import { convertNumber, type SolutionStep } from "@/lib/api";
 import { SolutionSteps } from "@/components/solution-steps";
+import { PolynomialLab } from "@/components/polynomial-lab";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -31,6 +32,7 @@ export const Route = createFileRoute("/")({
 type Side = "source" | "target";
 
 export function Index() {
+  const [workspace, setWorkspace] = useState<"conversion" | "numerical">("conversion");
   const [method, setMethod] = useState<ConversionMethod>("standard");
   const [number, setNumber] = useState("");
   const [sourceBase, setSourceBase] = useState<string>("10");
@@ -84,6 +86,11 @@ export function Index() {
 
         <main className="mt-8 flex-1">
           <div className="rounded-2xl border border-border bg-card p-5 shadow-soft sm:p-7">
+            <div className="mb-6 grid grid-cols-2 gap-1 rounded-xl border border-border bg-secondary p-1">
+              <button type="button" onClick={() => setWorkspace("conversion")} className={`rounded-lg px-3 py-2.5 text-sm font-semibold transition ${workspace === "conversion" ? "bg-card shadow-soft" : "text-muted-foreground"}`}>تبدیل مبنا</button>
+              <button type="button" onClick={() => setWorkspace("numerical")} className={`rounded-lg px-3 py-2.5 text-sm font-semibold transition ${workspace === "numerical" ? "bg-card shadow-soft" : "text-muted-foreground"}`}>آزمایشگاه محاسبات عددی</button>
+            </div>
+            {workspace === "conversion" ? <>
             <MethodSelector value={method} onChange={(m) => { invalidateResult(); setMethod(m); }} />
 
             <form onSubmit={handleConvert} className="mt-6 space-y-4" noValidate>
@@ -146,6 +153,7 @@ export function Index() {
                 <SolutionSteps steps={steps} loading={loading} />
               </SolutionAccordion>
             </div>
+            </> : <PolynomialLab />}
           </div>
         </main>
 
