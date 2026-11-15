@@ -1,6 +1,13 @@
 import { useState } from "react";
 import { Play } from "lucide-react";
-import { parsePolynomial, runHorner, type HornerResult } from "@/lib/numerical";
+import {
+  benchmarkPolynomialEvaluation,
+  parsePolynomial,
+  runHorner,
+  type HornerResult,
+  type PolynomialBenchmark,
+} from "@/lib/numerical";
+import { RuntimeComparison } from "@/components/runtime-comparison";
 import { getErrorMessage, INPUT_CLASS } from "../config";
 import { HornerBoard } from "../horner-components";
 import { ErrorMessage, FormField, ModuleIntro, StepPlayer } from "../shared-components";
@@ -9,12 +16,15 @@ export function HornerModule() {
   const [expression, setExpression] = useState("x^3+2x-5");
   const [lambda, setLambda] = useState("1");
   const [result, setResult] = useState<HornerResult | null>(null);
+  const [benchmark, setBenchmark] = useState<PolynomialBenchmark | null>(null);
   const [error, setError] = useState("");
 
   function execute() {
     try {
       const polynomial = parsePolynomial(expression, "x");
-      setResult(runHorner(polynomial.coefficients, Number(lambda)));
+      const numericLambda = Number(lambda);
+      setResult(runHorner(polynomial.coefficients, numericLambda));
+      setBenchmark(benchmarkPolynomialEvaluation(polynomial.coefficients, numericLambda));
       setError("");
     } catch (caughtError) {
       setError(getErrorMessage(caughtError));
@@ -63,6 +73,16 @@ export function HornerModule() {
       {result && (
         <>
           <HornerBoard result={result} />
+          {benchmark && (
+            <RuntimeComparison
+              title="مقایسهٔ ارزیابی چندجمله‌ای"
+              iterations={benchmark.iterations}
+              methods={[
+                { id: "horner", label: "روش هورنر", microseconds: benchmark.hornerMicroseconds },
+                { id: "standard", label: "روش معمولی توان‌ها", microseconds: benchmark.standardMicroseconds },
+              ]}
+            />
+          )}
           <StepPlayer key={`${expression}-${lambda}`} steps={result.steps} />
         </>
       )}

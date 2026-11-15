@@ -19,6 +19,15 @@ export interface ConversionResponse extends ConversionRequest {
   precision: number;
   truncated: boolean;
   steps: SolutionStep[];
+  benchmark: ConversionBenchmark;
+}
+
+export interface ConversionBenchmark {
+  standard: { method: "standard"; medianMicroseconds: number };
+  horner: { method: "horner"; medianMicroseconds: number };
+  iterations: number;
+  fasterMethod: "standard" | "horner" | "equal";
+  speedup: number;
 }
 
 const API_URL = (import.meta.env["VITE_API_URL"] ?? "http://localhost:8000").replace(/\/$/, "");

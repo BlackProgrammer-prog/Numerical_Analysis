@@ -11,9 +11,10 @@ import {
   SolutionAccordion,
 } from "@/components/calculator";
 import type { ConversionMethod } from "@/lib/bases";
-import { convertNumber, type SolutionStep } from "@/lib/api";
+import { convertNumber, type ConversionBenchmark, type SolutionStep } from "@/lib/api";
 import { SolutionSteps } from "@/components/solution-steps";
 import { PolynomialLab } from "@/components/polynomial-lab";
+import { RuntimeComparison } from "@/components/runtime-comparison";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -43,12 +44,14 @@ export function Index() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<string | null>(null);
   const [steps, setSteps] = useState<SolutionStep[]>([]);
+  const [benchmark, setBenchmark] = useState<ConversionBenchmark | null>(null);
   const revision = useRef(0);
 
   const invalidateResult = () => {
     revision.current += 1;
     setResult(null);
     setSteps([]);
+    setBenchmark(null);
     setNotice(false);
     setError(null);
   };
@@ -69,6 +72,7 @@ export function Index() {
       if (revision.current !== requestRevision) return;
       setResult(response.result);
       setSteps(response.steps);
+      setBenchmark(response.benchmark);
       setNotice(response.truncated);
     } catch (error) {
       if (revision.current === requestRevision) {
@@ -149,6 +153,24 @@ export function Index() {
 
             <div className="mt-6 space-y-3">
               <ResultPanel result={result} />
+              {benchmark && (
+                <RuntimeComparison
+                  title="مقایسهٔ زمان تبدیل مبنا"
+                  iterations={benchmark.iterations}
+                  methods={[
+                    {
+                      id: "standard",
+                      label: "روش معمولی",
+                      microseconds: benchmark.standard.medianMicroseconds,
+                    },
+                    {
+                      id: "horner",
+                      label: "روش هورنر",
+                      microseconds: benchmark.horner.medianMicroseconds,
+                    },
+                  ]}
+                />
+              )}
               <SolutionAccordion>
                 <SolutionSteps steps={steps} loading={loading} />
               </SolutionAccordion>
