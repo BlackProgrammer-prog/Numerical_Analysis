@@ -1,4 +1,6 @@
 import os
+from statistics import median
+from time import perf_counter_ns
 from typing import Literal
 
 from fastapi import FastAPI, HTTPException
@@ -31,10 +33,24 @@ class SolutionStep(BaseModel):
     expression: str
 
 
+class MethodTiming(BaseModel):
+    method: Literal["standard", "horner"]
+    medianMicroseconds: float
+
+
+class ConversionBenchmark(BaseModel):
+    standard: MethodTiming
+    horner: MethodTiming
+    iterations: int
+    fasterMethod: Literal["standard", "horner", "equal"]
+    speedup: float
+
+
 class ConversionResponse(ConversionRequest):
     result: str
     truncated: bool = Field(description="True when the precision limit discarded a nonzero remainder.")
     steps: list[SolutionStep] = Field(description="Ordered calculation steps for the selected method; numeric values are strings to preserve exactness.")
+    benchmark: ConversionBenchmark
 
 
 class ConversionError(BaseModel):
@@ -71,6 +87,41 @@ def convert_number(payload: ConversionRequest) -> ConversionResponse:
         # A reduced fraction terminates within p digits iff its denominator divides base**p.
         exact_value = convert_to_decimal(payload.number, payload.sourceBase)
         truncated = pow(payload.targetBase, payload.precision) % exact_value.denominator != 0
+        benchmark = benchmark_conversion(payload)
     except ValueError as error:
         raise HTTPException(status_code=400, detail=str(error)) from error
-    return ConversionResponse(**payload.model_dump(), result=result, truncated=truncated, steps=steps)
+    return ConversionResponse(
+        **payload.model_dump(), result=result, truncated=truncated,
+        steps=steps, benchmark=benchmark,
+    )
+
+
+def benchmark_conversion(payload: ConversionRequest) -> ConversionBenchmark:
+    algorithms = {"standard": convert_base, "horner": convert}
+    timings: dict[str, float] = {}
+    iterations = 30
+
+    for name, algorithm in algorithms.items():
+        algorithm(payload.number, payload.sourceBase, payload.targetBase, payload.precision)
+        samples = []
+        for _ in range(iterations):
+            started = perf_counter_ns()
+            algorithm(payload.number, payload.sourceBase, payload.targetBase, payload.precision)
+            samples.append(perf_counter_ns() - started)
+        timings[name] = median(samples) / 1_000
+
+    standard_time = timings["standard"]
+    horner_time = timings["horner"]
+    if abs(standard_time - horner_time) <= min(standard_time, horner_time) * 0.01:
+        faster_method = "equal"
+    else:
+        faster_method = "standard" if standard_time < horner_time else "horner"
+    speedup = max(standard_time, horner_time) / max(min(standard_time, horner_time), 1e-9)
+
+    return ConversionBenchmark(
+        standard=MethodTiming(method="standard", medianMicroseconds=standard_time),
+        horner=MethodTiming(method="horner", medianMicroseconds=horner_time),
+        iterations=iterations,
+        fasterMethod=faster_method,
+        speedup=speedup,
+    )
