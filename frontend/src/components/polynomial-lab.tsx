@@ -18,7 +18,7 @@ export function PolynomialLab() {
 
   return (
     <div>
-      <div className="mb-6 overflow-x-auto">
+      <div className="scrollbar-hidden mb-6 overflow-x-auto overscroll-x-contain">
         <nav className="flex min-w-max gap-2 scro" aria-label="ماژول‌های محاسبات عددی">
           {NUMERICAL_MODULES.map(({ id, label, icon: Icon }) => (
             <button
