@@ -3,7 +3,7 @@ import type { HornerResult, LearningStep } from "./types";
 export function runHorner(input: number[], lambda: number): HornerResult {
   if (input.length < 2 || input.some((value) => !Number.isFinite(value)) || !Number.isFinite(lambda)) throw new Error("ضرایب و λ باید اعداد متناهی باشند.");
   const first = input[0]!;
-  const normalized = first < 0 ? input.map((value) => -value) : [...input];
+  const normalized = first < 0 ? input.map((value) => value === 0 ? 0 : -value) : [...input];
   const wasNormalized = first < 0;
   const products: Array<number | null> = [null];
   const sums: number[] = [normalized[0]!];
