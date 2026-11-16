@@ -39,4 +39,11 @@ describe("conversion API client", () => {
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new TypeError("Failed to fetch")));
     await expect(convertNumber(payload)).rejects.toThrow("ارتباط با سرور برقرار نشد");
   });
+
+  it("identifies a backend that does not support custom digits", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(
+      JSON.stringify({ detail: [{ type: "extra_forbidden", loc: ["body", "extraDigits"], msg: "Extra inputs are not permitted" }] }), { status: 422 },
+    )));
+    await expect(convertNumber({ ...payload, extraDigits: "!#%*&\"}{" })).rejects.toThrow("سرور بک‌اند را مجدداً اجرا کنید");
+  });
 });

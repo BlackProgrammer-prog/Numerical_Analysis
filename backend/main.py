@@ -5,11 +5,11 @@ from typing import Literal
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from Alireza_mabna10 import convert_base, convert_to_decimal
 from Meysam_horner import convert
-from conversion_validation import MAX_BASE, MAX_NUMBER_LENGTH, MAX_PRECISION
+from conversion_validation import MAX_BASE, MAX_NUMBER_LENGTH, MAX_PRECISION, MAX_SUPPORTED_BASE, resolve_digits, validate_base
 
 
 class ConversionRequest(BaseModel):
@@ -20,11 +20,21 @@ class ConversionRequest(BaseModel):
 
     number: str = Field(min_length=1, max_length=MAX_NUMBER_LENGTH,
                         description="Signed number using 0-9, A-Z, a-z and an optional decimal point; case-sensitive above base 36.")
-    sourceBase: int = Field(ge=2, le=MAX_BASE, strict=True)
-    targetBase: int = Field(ge=2, le=MAX_BASE, strict=True)
+    sourceBase: int = Field(ge=2, le=MAX_SUPPORTED_BASE, strict=True)
+    targetBase: int = Field(ge=2, le=MAX_SUPPORTED_BASE, strict=True)
     method: Literal["standard", "horner"] = "standard"
     precision: int = Field(default=20, ge=0, le=MAX_PRECISION, strict=True,
                            description="Maximum fractional output digits; truncates toward zero.")
+
+    extraDigits: str = Field(default="", max_length=MAX_SUPPORTED_BASE - MAX_BASE,
+                             description="Additional unique Unicode symbols, ordered from digit value 62 onward.")
+
+    @model_validator(mode="after")
+    def validate_alphabet(self):
+        digits = resolve_digits(self.extraDigits)
+        validate_base(self.sourceBase, digits)
+        validate_base(self.targetBase, digits)
+        return self
 
 
 class SolutionStep(BaseModel):
@@ -59,7 +69,7 @@ class ConversionError(BaseModel):
 
 app = FastAPI(
     title="Number Base Converter API",
-    description=f"Convert signed integers and fractions between bases 2–{MAX_BASE} using standard or Horner conversion.",
+    description=f"Convert signed integers and fractions between bases 2–{MAX_SUPPORTED_BASE} with user-defined extra digits using standard or Horner conversion.",
     version="1.0.0",
 )
 app.add_middleware(
@@ -83,9 +93,9 @@ def convert_number(payload: ConversionRequest) -> ConversionResponse:
     algorithm = convert_base if payload.method == "standard" else convert
     steps = []
     try:
-        result = algorithm(payload.number, payload.sourceBase, payload.targetBase, payload.precision, steps=steps)
+        result = algorithm(payload.number, payload.sourceBase, payload.targetBase, payload.precision, steps=steps, extra_digits=payload.extraDigits)
         # A reduced fraction terminates within p digits iff its denominator divides base**p.
-        exact_value = convert_to_decimal(payload.number, payload.sourceBase)
+        exact_value = convert_to_decimal(payload.number, payload.sourceBase, extra_digits=payload.extraDigits)
         truncated = pow(payload.targetBase, payload.precision) % exact_value.denominator != 0
         benchmark = benchmark_conversion(payload)
     except ValueError as error:
@@ -102,11 +112,11 @@ def benchmark_conversion(payload: ConversionRequest) -> ConversionBenchmark:
     iterations = 30
 
     for name, algorithm in algorithms.items():
-        algorithm(payload.number, payload.sourceBase, payload.targetBase, payload.precision)
+        algorithm(payload.number, payload.sourceBase, payload.targetBase, payload.precision, extra_digits=payload.extraDigits)
         samples = []
         for _ in range(iterations):
             started = perf_counter_ns()
-            algorithm(payload.number, payload.sourceBase, payload.targetBase, payload.precision)
+            algorithm(payload.number, payload.sourceBase, payload.targetBase, payload.precision, extra_digits=payload.extraDigits)
             samples.append(perf_counter_ns() - started)
         timings[name] = median(samples) / 1_000
 

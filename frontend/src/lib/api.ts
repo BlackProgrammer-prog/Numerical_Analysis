@@ -6,6 +6,7 @@ export interface ConversionRequest {
   targetBase: number;
   method: ConversionMethod;
   precision?: number;
+  extraDigits?: string;
 }
 
 export interface SolutionStep {
@@ -47,6 +48,15 @@ export async function convertNumber(payload: ConversionRequest): Promise<Convers
   if (!response.ok) {
     const body = await response.json().catch(() => null);
     const detail = body?.detail;
+    if (Array.isArray(detail)) {
+      const outdatedBackend = payload.extraDigits && detail.some((error: { type?: string; loc?: string[] }) =>
+        error.type === "extra_forbidden" && error.loc?.includes("extraDigits"));
+      if (outdatedBackend) {
+        throw new Error("نسخهٔ در حال اجرای بک‌اند از کاراکترهای دلخواه پشتیبانی نمی‌کند. سرور بک‌اند را مجدداً اجرا کنید.");
+      }
+      const messages = detail.map((error: { msg?: string }) => error.msg).filter(Boolean).join("؛ ");
+      throw new Error(`ورودی نامعتبر است${messages ? `: ${messages}` : "."}`);
+    }
     throw new Error(typeof detail === "string" ? detail : "ورودی نامعتبر است؛ عدد و مبناهای انتخاب‌شده را بررسی کنید.");
   }
   return response.json();

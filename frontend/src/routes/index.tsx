@@ -10,11 +10,12 @@ import {
   ResultPanel,
   SolutionAccordion,
 } from "@/components/calculator";
-import type { ConversionMethod } from "@/lib/bases";
+import { MAX_BASE, validateExtraDigits, type ConversionMethod } from "@/lib/bases";
 import { convertNumber, type ConversionBenchmark, type SolutionStep } from "@/lib/api";
 import { SolutionSteps } from "@/components/solution-steps";
 import { PolynomialLab } from "@/components/polynomial-lab";
 import { RuntimeComparison } from "@/components/runtime-comparison";
+import { CustomDigitsDialog } from "@/components/custom-digits-dialog";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -35,6 +36,8 @@ type Side = "source" | "target";
 export function Index() {
   const [workspace, setWorkspace] = useState<"conversion" | "numerical">("conversion");
   const [method, setMethod] = useState<ConversionMethod>("standard");
+  const [extraDigits, setExtraDigits] = useState("");
+  const [digitsDialogOpen, setDigitsDialogOpen] = useState(false);
   const [number, setNumber] = useState("");
   const [sourceBase, setSourceBase] = useState<string>("10");
   const [targetBase, setTargetBase] = useState<string>("2");
@@ -63,11 +66,14 @@ export function Index() {
     if (loading) return;
     invalidateResult();
     if (number.trim() === "") return setError("لطفاً عدد ورودی را وارد کنید.");
+    const alphabetError = validateExtraDigits(extraDigits, Math.max(Number(sourceBase), Number(targetBase)));
+    if (alphabetError) return setError(alphabetError);
     const requestRevision = revision.current;
     setLoading(true);
     try {
       const response = await convertNumber({
         number, sourceBase: Number(sourceBase), targetBase: Number(targetBase), method,
+        ...(extraDigits ? { extraDigits } : {}),
       });
       if (revision.current !== requestRevision) return;
       setResult(response.result);
@@ -133,6 +139,16 @@ export function Index() {
                 />
               </div>
 
+              {(Math.max(Number(sourceBase), Number(targetBase)) > MAX_BASE || extraDigits !== "") && (
+                <div>
+                  <button type="button" onClick={() => setDigitsDialogOpen(true)} className="h-11 w-full rounded-lg border border-input bg-background px-3 text-sm font-medium">تنظیم جدول کاراکترها</button>
+                  <p className="mt-2 text-sm text-muted-foreground">کاراکترهای ارقام بالاتر از ۶۱ را در جدول تعیین کنید.</p>
+                  <div className="mt-2 flex flex-wrap gap-2" dir="ltr">
+                    {Array.from(extraDigits).map((symbol, index) => <span key={index} className="rounded border border-border px-2 font-mono text-sm">{62 + index} = {symbol}</span>)}
+                  </div>
+                </div>
+              )}
+
               <button
                 type="submit"
                 disabled={loading}
@@ -189,9 +205,20 @@ export function Index() {
           invalidateResult();
           if (dialogFor === "source") setSourceBase(b);
           if (dialogFor === "target") setTargetBase(b);
+          if (Number(b) > MAX_BASE) setDigitsDialogOpen(true);
           setDialogFor(null);
         }}
       />
+      {digitsDialogOpen && <CustomDigitsDialog
+        requiredBase={Math.max(Number(sourceBase), Number(targetBase))}
+        value={extraDigits}
+        onClose={() => setDigitsDialogOpen(false)}
+        onConfirm={(digits) => {
+          invalidateResult();
+          setExtraDigits(digits);
+          setDigitsDialogOpen(false);
+        }}
+      />}
     </div>
   );
 }

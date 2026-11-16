@@ -24,6 +24,24 @@ This project is developed as part of a university **Mathematical Analysis** cour
 
 ## Installation & Usage
 
+### Custom digits above base 62
+
+Choose a custom source or target base (up to 1024), then enter additional
+characters in the calculator. Their order defines digit values starting at 62;
+for example, `@#` makes `@` equal to 62 and `#` equal to 63 for base 64.
+The existing `0-9`, `A-Z`, `a-z` digits keep their values. Both bases use the
+same alphabet for that conversion. Symbols must be unique; whitespace, control
+characters and `+`, `-`, `.` are reserved. Unicode symbols such as emoji are supported.
+
+API clients pass `extraDigits`, for example:
+
+```json
+{"number":"63","sourceBase":10,"targetBase":64,"extraDigits":"@#","method":"horner"}
+```
+
+This returns `#`. Omitting `extraDigits` preserves the default base 2–62 behavior.
+Python callers can pass `extra_digits="@#"` to either conversion algorithm.
+
 ### Windows desktop EXE
 
 The ready-to-run Windows 10/11 x64 application is generated at

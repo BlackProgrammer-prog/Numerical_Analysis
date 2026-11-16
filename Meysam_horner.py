@@ -1,6 +1,7 @@
 from fractions import Fraction
 from conversion_validation import (
     DIGITS,
+    resolve_digits,
     DIGIT_TO_VALUE,
     normalize_number,
     validate_base,
@@ -11,11 +12,13 @@ from solution_steps import record, integer_in_base, fraction_step, fraction_end
 digits = DIGITS  # Shared alphabet loaded from digit_map.json.
 
 
-def convert(number, x, y, precision=20, steps=None):
+def convert(number, x, y, precision=20, steps=None, extra_digits=""):
+    digits = resolve_digits(extra_digits)
+    digit_values = {ch: i for i, ch in enumerate(digits)}
 
-    validate_base(y)
+    validate_base(y, digits)
     validate_precision(precision)
-    number = normalize_number(number, x)
+    number = normalize_number(number, x, digits)
     original_number = number
 
     negative = False
@@ -32,8 +35,8 @@ def convert(number, x, y, precision=20, steps=None):
     integer_part = parts[0] if parts[0] else "0"
     fraction_part = parts[1] if len(parts) == 2 else ""
 
-    integer_digits = [DIGIT_TO_VALUE[ch] for ch in integer_part]
-    fraction_digits = [DIGIT_TO_VALUE[ch] for ch in fraction_part]
+    integer_digits = [digit_values[ch] for ch in integer_part]
+    fraction_digits = [digit_values[ch] for ch in fraction_part]
 
     result = [0]
     record(steps, "شروع هورنر برای بخش صحیح",
@@ -71,7 +74,7 @@ def convert(number, x, y, precision=20, steps=None):
             after = "".join(digits[d] for d in reversed(result))
             record(steps, "ضرب و جمع هورنر",
                    f"رقم بعدی «{digits[digit]}» با ارزش ده‌دهی {digit} را وارد می‌کنیم. همهٔ عملوندهای رابطهٔ زیر در مبنای مقصد {y} نوشته شده‌اند؛ ضرب و جمع با انتقال رقم در همین مبنا انجام می‌شود.",
-                   f"({before})_{y} × ({integer_in_base(x, y)})_{y} + ({integer_in_base(digit, y)})_{y} = ({after})_{y}")
+                   f"({before})_{y} × ({integer_in_base(x, y, digits)})_{y} + ({integer_in_base(digit, y, digits)})_{y} = ({after})_{y}")
 
     integer_result = ""
 
@@ -107,7 +110,7 @@ def convert(number, x, y, precision=20, steps=None):
         fraction -= digit
 
         fraction_result += digits[digit]
-        fraction_step(steps, before, y, product, digit, fraction)
+        fraction_step(steps, before, y, product, digit, fraction, digits)
 
     if had_fraction:
         fraction_end(steps, fraction, precision, fraction_result)

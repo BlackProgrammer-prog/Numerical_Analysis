@@ -1,6 +1,7 @@
 """Shared, JSON-backed digit mapping and validation for both conversion algorithms."""
 
 import json
+import unicodedata
 from pathlib import Path
 
 
@@ -66,9 +67,25 @@ DIGIT_TO_VALUE = {symbol: value for value, symbol in VALUE_TO_DIGIT.items()}
 MAX_BASE = len(DIGITS)
 
 
-def validate_base(base):
-    if type(base) is not int or not 2 <= base <= MAX_BASE:
-        raise ValueError(f"Base must be an integer between 2 and {MAX_BASE}.")
+MAX_SUPPORTED_BASE = 1024
+
+
+def resolve_digits(extra_digits=""):
+    if not isinstance(extra_digits, str):
+        raise ValueError("Extra digits must be a string.")
+    if len(DIGITS) + len(extra_digits) > MAX_SUPPORTED_BASE:
+        raise ValueError(f"At most {MAX_SUPPORTED_BASE - len(DIGITS)} extra digits are allowed.")
+    alphabet = DIGITS + extra_digits
+    if len(set(alphabet)) != len(alphabet):
+        raise ValueError("Digit symbols must be unique, including the default digits.")
+    if any(ch.isspace() or ch in "+-." or unicodedata.category(ch).startswith("C") for ch in extra_digits):
+        raise ValueError("Extra digits cannot contain whitespace, control characters, '+', '-' or '.'.")
+    return alphabet
+
+
+def validate_base(base, digits=DIGITS):
+    if type(base) is not int or not 2 <= base <= len(digits):
+        raise ValueError(f"Base must be an integer between 2 and {len(digits)}; define extra digits for higher bases.")
 
 
 def validate_precision(precision):
@@ -76,8 +93,9 @@ def validate_precision(precision):
         raise ValueError(f"Precision must be an integer between 0 and {MAX_PRECISION}.")
 
 
-def normalize_number(number, source_base):
-    validate_base(source_base)
+def normalize_number(number, source_base, digits=DIGITS):
+    validate_base(source_base, digits)
+    digit_to_value = {symbol: value for value, symbol in enumerate(digits)}
     if not isinstance(number, str):
         raise ValueError("Number must be a string.")
     if len(number) > MAX_NUMBER_LENGTH:
@@ -97,7 +115,7 @@ def normalize_number(number, source_base):
     for digit in unsigned:
         if digit == ".":
             continue
-        digit_value = DIGIT_TO_VALUE.get(digit)
+        digit_value = digit_to_value.get(digit)
         if digit_value is None or digit_value >= source_base:
             raise ValueError(f"Digit '{digit}' is not valid in base {source_base}.")
 
