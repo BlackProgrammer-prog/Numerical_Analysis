@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Check, ChevronDown, Moon, Plus, Sigma, Sun, X } from "lucide-react";
 import { MAX_SUPPORTED_BASE, STANDARD_BASES, getBaseName, validateCustomBase, type ConversionMethod } from "@/lib/bases";
+import { SiteNavigation } from "@/components/site-navigation";
 
 /* ---------- Theme toggle ---------- */
 
@@ -46,7 +47,10 @@ export function Header() {
           <p className="text-xs text-muted-foreground">Number Base Conversion Calculator</p>
         </div>
       </div>
-      <ThemeToggle />
+      <div className="flex items-center gap-2">
+        <ThemeToggle />
+        <SiteNavigation />
+      </div>
     </header>
   );
 }
@@ -346,10 +350,8 @@ export function SolutionAccordion({ children }: { children?: ReactNode }) {
 
 export function Footer() {
   return (
-    <footer className="mt-12 border-t border-border pt-6 text-center text-sm leading-7 text-muted-foreground">
-      <p>کاری از بچه‌های علوم کامپیوتر دانشگاه شاهد</p>
-      <p>پروژه درس آنالیز عددی - پاییز 1405</p>
-      <p><a href="https://github.com/BlackProgrammer-prog/Numerical_Analysis">لینک پروژه</a></p>
+    <footer className="mt-12 border-t border-border pt-5 text-center text-xs leading-7 text-muted-foreground sm:text-sm">
+      <p>پروژه درس آنالیز عددی (دکتر رحمانی) - پاییز 1405</p>
     </footer>
   );
 }
