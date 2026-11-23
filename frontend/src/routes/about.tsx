@@ -2,40 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { ExternalLink, Github, Users } from "lucide-react";
 import { InformationPageLayout } from "@/components/information-page-layout";
 
-type TeamMember = {
-  name: string;
-  role: string;
-  initials: string;
-  githubUrl: string;
-};
-
-// لینک GitHub هر عضو را در githubUrl همان شخص وارد کنید.
-const TEAM_MEMBERS: TeamMember[] = [
-  {
-    name: "پرهام عزیزی",
-    role: "توسعه‌دهنده بک‌اند پروژه",
-    initials: "پ‌ع",
-    githubUrl: "",
-  },
-  {
-    name: "علی زندی",
-    role: "توسعه‌دهنده فیچرهای پروژه و فرانت‌اند",
-    initials: "ع‌ز",
-    githubUrl: "",
-  },
-  {
-    name: "میثم محسنی",
-    role: "توسعه‌دهنده الگوریتم‌های اجرایی پروژه",
-    initials: "م‌م",
-    githubUrl: "",
-  },
-  {
-    name: "علیرضا رسولیان",
-    role: "هماهنگ‌کننده پروژه و توسعه‌دهنده الگوریتم پروژه",
-    initials: "ع‌ر",
-    githubUrl: "",
-  },
-];
+import TEAM_MEMBERS from "@/data/team-members.json";
 
 export const Route = createFileRoute("/about")({
   head: () => ({
@@ -69,10 +36,10 @@ function AboutPage() {
               className="group relative overflow-hidden rounded-2xl border border-border/80 bg-background/75 px-4 py-5 text-center shadow-soft transition-all duration-200 hover:-translate-y-1 hover:border-primary/25 hover:shadow-pop sm:px-5 sm:py-6"
             >
               <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-primary/35 to-transparent" />
-              <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-2xl border border-primary/15 bg-primary/10 text-sm font-bold text-primary shadow-soft transition-transform duration-200 group-hover:scale-105">
-                {member.initials}
+              <div dir="ltr" aria-hidden="true" className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-2xl border border-primary/15 bg-primary/10 text-sm font-bold text-primary shadow-soft transition-transform duration-200 group-hover:scale-105">
+                {member.name.split(" ").map((part) => part[0]).join("")}
               </div>
-              <h2 className="text-sm font-bold text-foreground sm:text-[15px]">
+              <h2 dir="ltr" lang="en" className="text-sm font-bold text-foreground sm:text-[15px]">
                 {member.name}
               </h2>
               <p className="mx-auto mt-2 min-h-10 max-w-[16rem] text-xs leading-6 text-muted-foreground sm:text-[13px]">
@@ -95,7 +62,7 @@ function AboutPage() {
                 ) : (
                   <span
                     className="inline-flex items-center justify-center gap-1.5 rounded-full border border-dashed border-border bg-secondary/55 px-3 py-1.5 font-medium text-muted-foreground"
-                    title={`لینک GitHub ${member.name} را در فایل about.tsx وارد کنید`}
+                    title="لینک گیت‌هاب هنوز اضافه نشده است"
                   >
                     <Github className="h-3.5 w-3.5" />
                     لینک GitHub
