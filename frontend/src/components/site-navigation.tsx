@@ -33,7 +33,6 @@ export function SiteNavigation() {
         align="end"
         side="bottom"
         sideOffset={12}
-        dir="rtl"
         className="w-64 rounded-2xl border-border/80 bg-card/95 p-2.5 shadow-pop backdrop-blur-xl"
       >
         <DropdownMenuLabel className="px-3 pb-2 pt-2 text-right">
